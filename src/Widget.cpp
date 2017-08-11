@@ -47,7 +47,7 @@ namespace
                 }
             }
         }
-    } windows;
+    } widgets;
 }
 
 struct Widget::ControlBlock : node
@@ -142,13 +142,13 @@ const char* Application::version() const
     return glfwGetVersionString();
 }
 
-int Application::run()
+int Application::exec()
 {
     while(true)
     {
         unsigned c = 0;
-        node* p = windows.next;
-        while(p != &windows)
+        node* p = widgets.next;
+        while(p != &widgets)
         {
             auto cb = static_cast<Widget::ControlBlock*>(p);
             if(cb->w)
@@ -168,15 +168,15 @@ int Application::run()
 
 Widget::Widget() : cb(new ControlBlock{})
 {
-    windows.add(cb);
     cb->sz = {100, 100};
     cb->dt = DBL_MAX;
+    widgets.add(cb);
 }
 
 Widget::~Widget()
 {
     destroy();
-    windows.remove(cb);
+    widgets.remove(cb);
     delete cb;
 }
 
@@ -230,20 +230,20 @@ void Widget::close()
     else glfwSetWindowShouldClose(cb->w, 1);
 }
 
-const std::string& Widget::title() const
+const std::string& Widget::name() const
 {
     return cb->title;
 }
 
-void Widget::setTitle(const char* title)
+void Widget::rename(const char* title)
 {
     if(cb->w) glfwSetWindowTitle(cb->w, title);
     cb->title = title;
 }
 
-void Widget::setTitle(const std::string& title)
+void Widget::rename(const std::string& title)
 {
-    setTitle(title.c_str());
+    rename(title.c_str());
 }
 
 Size Widget::size() const
@@ -273,49 +273,9 @@ void Widget::repaint(double dt)
     cb->dt = dt;
 }
 
-void Widget::paintEvent(PaintEvent* e)
-{
-    // Clear the screen.
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    // Draw the scene:
-    glBegin( GL_TRIANGLES );
-    glColor3f( 1.0f, 0.0f, 0.0f );
-    glVertex3f(-1,-1,0.0);
-
-    glColor3f( 0.0f, 1.0f, 0.0f );
-    glVertex3f(1,0.0,0.0);
-
-    glColor3f( 0.0f, 0.0f, 1.0f );
-    glVertex3f(0.0,1,0.0);
-    glEnd();
-
-    repaint(1);
-    std::cout << "paint " << e->dt << std::endl;
-}
-
-void Widget::keyEvent(KeyEvent* e)
-{
-    std::cout << (char)e->key << ' ' << (int)e->action << std::endl;
-}
-
-void Widget::mouseEvent(MouseEvent* e)
-{
-    std::cout << (int)e->button << ' ' << (int)e->action << std::endl;
-}
-
-void Widget::moveEvent(MoveEvent* e)
-{
-    std::cout << "move " << e->dp.x << ' ' << e->dp.y << std::endl;
-}
-
-void Widget::resizeEvent(SizeEvent* e)
-{
-    std::cout << "resize " << e->dz.w << ' ' << e->dz.h << std::endl;
-}
-
-void Widget::closeEvent()
-{
-    close();
-    std::cout << "close" << std::endl;
-}
+void Widget::paintEvent(PaintEvent* e) {}
+void Widget::keyEvent(KeyEvent* e) {}
+void Widget::mouseEvent(MouseEvent* e) {}
+void Widget::moveEvent(MoveEvent* e) {}
+void Widget::resizeEvent(SizeEvent* e) {}
+void Widget::closeEvent() { close(); }

@@ -8,7 +8,8 @@ find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
-include_directories(${OpenGL_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 file(GLOB SOURCE_FILES *.cpp)
 add_library(glw ${SOURCE_FILES})
+
+include_directories(${OpenGL_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 target_link_libraries(glw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})

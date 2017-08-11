@@ -16,7 +16,7 @@ namespace glw
         Application(int argc, char* argv[]);
         ~Application();
         const char* version() const;
-        int run();
+        int exec();
     };
 
     struct Point
@@ -103,9 +103,9 @@ namespace glw
         void restore();
         void maximize();
         void close();
-        const std::string& title() const;
-        void setTitle(const char* title);
-        void setTitle(const std::string& title);
+        const std::string& name() const;
+        void rename(const char* title);
+        void rename(const std::string& title);
         Size size() const;
         void resize(Size sz);
         Point pos() const;
