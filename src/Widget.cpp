@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cfloat>
+#include <atomic>
 
 using namespace glw;
 
@@ -57,7 +58,7 @@ struct Widget::ControlBlock : node
     Point pos;
     Size sz;
     double ts;
-    double dt;
+    std::atomic<double> dt;
 
     static Widget* get(GLFWwindow* window)
     {
@@ -76,7 +77,7 @@ struct Widget::ControlBlock : node
         double ts = glfwGetTime();
         PaintEvent e{ ts - w->cb->ts };
         w->cb->ts = ts;
-        w->cb->dt = DBL_MAX;
+        w->cb->dt.store(DBL_MAX, std::memory_order_relaxed);
         w->paintEvent(&e);
         glfwSwapBuffers(window);
     }
@@ -154,7 +155,7 @@ int Application::exec()
             if(cb->w)
             {
                 ++c;
-                if(cb->dt <= glfwGetTime() - cb->ts)
+                if(cb->dt.load(std::memory_order_relaxed) <= glfwGetTime() - cb->ts)
                     cb->paint(cb->w);
             }
             p = p->next;
@@ -169,7 +170,7 @@ int Application::exec()
 Widget::Widget() : cb(new ControlBlock{})
 {
     cb->sz = {100, 100};
-    cb->dt = DBL_MAX;
+    std::atomic_init(&cb->dt, DBL_MAX);
     widgets.add(cb);
 }
 
@@ -270,7 +271,7 @@ void Widget::move(Point pos)
 
 void Widget::repaint(double dt)
 {
-    cb->dt = dt;
+    cb->dt.store(dt, std::memory_order_relaxed);
 }
 
 void Widget::paintEvent(PaintEvent* e) {}
