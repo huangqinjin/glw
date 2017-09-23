@@ -73,7 +73,7 @@ struct Widget::ControlBlock : node
 
     static void paint(GLFWwindow* window)
     {
-        glfwMakeContextCurrent(window);
+     //   glfwMakeContextCurrent(window);
         Widget* w = get(window);
         double ts = glfwGetTime();
         PaintEvent e{ ts - w->cb->ts };
@@ -310,6 +310,11 @@ void Widget::move(Point pos)
 void Widget::repaint(double dt)
 {
     cb->dt.store(dt, std::memory_order_relaxed);
+}
+
+KeyAction Widget::status(MouseButton button) const
+{
+    return static_cast<KeyAction>(glfwGetMouseButton(cb->w, static_cast<int>(button)));
 }
 
 void Widget::initialize() {}

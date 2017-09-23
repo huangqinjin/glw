@@ -9,6 +9,14 @@
 using namespace glw;
 class MainWindow : public Widget
 {
+    void initialize() override
+    {
+        glClearColor(0, 0, 0, 0);
+        glShadeModel(GL_SMOOTH);
+
+        std::cout << "initialize" << std::endl;
+    }
+
     void paintEvent(PaintEvent* e) override
     {
         // Clear the screen.
@@ -32,12 +40,22 @@ class MainWindow : public Widget
 
     void keyEvent(KeyEvent* e) override
     {
-        std::cout << (char)e->key << ' ' << (int)e->action << std::endl;
+        std::cout << "key " << (char)e->key << ' ' << (int)e->action << std::endl;
     }
 
     void mouseEvent(MouseEvent* e) override
     {
-        std::cout << (int)e->button << ' ' << (int)e->action << std::endl;
+        std::cout << "mouse " << (int)e->button << ' ' << (int)e->action << std::endl;
+    }
+
+    void wheelEvent(WheelEvent* e) override
+    {
+        std::cout << "wheel " << e->dx << std::endl;
+    }
+
+    void cursorEvent(CursorEvent* e) override
+    {
+        std::cout << "cursor " << (int)e->action << ' ' << e->dp.x << ' ' << e->dp.y << std::endl;
     }
 
     void moveEvent(MoveEvent* e) override
