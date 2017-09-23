@@ -94,6 +94,12 @@ struct Widget::ControlBlock : node
         get(window)->mouseEvent(&e);
     }
 
+    static void wheel(GLFWwindow* window, double xoffset, double yoffset)
+    {
+        WheelEvent e{ static_cast<int>(yoffset) };
+        get(window)->wheelEvent(&e);
+    }
+
     static void move(GLFWwindow* window, int xpos, int ypos)
     {
         Widget* w = get(window);
@@ -130,7 +136,6 @@ Application::Application(int argc, char* argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_REFRESH_RATE, 1);
-    glfwSwapInterval(1);
 }
 
 Application::~Application()
@@ -191,16 +196,22 @@ void Widget::show()
 {
     if(!cb->w)
     {
-        cb->w = glfwCreateWindow(cb->sz.w, cb->sz.h, cb->title.c_str(), 0, 0);
+        cb->w = glfwCreateWindow(cb->sz.w, cb->sz.h, cb->title.c_str(), nullptr, nullptr);
         glfwSetWindowPos(cb->w, cb->pos.x, cb->pos.y);
         glfwSetWindowUserPointer(cb->w, this);
         glfwSetWindowRefreshCallback(cb->w, &ControlBlock::paint);
         glfwSetKeyCallback(cb->w, &ControlBlock::keyboard);
         glfwSetMouseButtonCallback(cb->w, &ControlBlock::mouse);
+        glfwSetScrollCallback(cb->w, &ControlBlock::wheel);
         glfwSetWindowPosCallback(cb->w, &ControlBlock::move);
         glfwSetWindowSizeCallback(cb->w, &ControlBlock::resize);
         glfwSetWindowCloseCallback(cb->w, &ControlBlock::close);
         cb->ts = glfwGetTime();
+        glfwMakeContextCurrent(cb->w);
+        glfwSwapInterval(1);
+        initialize();
+        SizeEvent e{ cb->sz };
+        resizeEvent(&e);
     }
     glfwShowWindow(cb->w);
 }
@@ -274,9 +285,11 @@ void Widget::repaint(double dt)
     cb->dt.store(dt, std::memory_order_relaxed);
 }
 
+void Widget::initialize() {}
 void Widget::paintEvent(PaintEvent* e) {}
 void Widget::keyEvent(KeyEvent* e) {}
 void Widget::mouseEvent(MouseEvent* e) {}
+void Widget::wheelEvent(WheelEvent* e) {}
 void Widget::moveEvent(MoveEvent* e) {}
 void Widget::resizeEvent(SizeEvent* e) {}
 void Widget::closeEvent() { close(); }

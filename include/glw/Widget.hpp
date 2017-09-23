@@ -80,6 +80,11 @@ namespace glw
         int mods;
     };
 
+    struct WheelEvent
+    {
+        int dx;
+    };
+
     struct MoveEvent
     {
         Point dp;
@@ -110,12 +115,14 @@ namespace glw
         void resize(Size sz);
         Point pos() const;
         void move(Point pos);
-        void repaint(double dt);
+        void repaint(double dt = 0);
 
     private:
+        virtual void initialize();
         virtual void paintEvent(PaintEvent* e);
         virtual void keyEvent(KeyEvent* e);
         virtual void mouseEvent(MouseEvent* e);
+        virtual void wheelEvent(WheelEvent* e);
         virtual void moveEvent(MoveEvent* e);
         virtual void resizeEvent(SizeEvent* e);
         virtual void closeEvent();
