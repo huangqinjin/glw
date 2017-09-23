@@ -9,6 +9,8 @@
 
 namespace glw
 {
+    using real = float;
+
     class Application
     {
     public:
@@ -21,18 +23,18 @@ namespace glw
 
     struct Point
     {
-        int x;
-        int y;
+        real x;
+        real y;
         Point() = default;
-        Point(int x, int y) : x(x), y(y) {}
+        Point(real x, real y) : x(x), y(y) {}
     };
 
     struct Size
     {
-        int w;
-        int h;
+        real w;
+        real h;
         Size() = default;
-        Size(int w, int h) : w(w), h(h) {}
+        Size(real w, real h) : w(w), h(h) {}
     };
 
 
@@ -44,11 +46,18 @@ namespace glw
         MIDDLE,
     };
 
+    enum class CursorAction
+    {
+        ENTER,
+        LEAVE,
+        MOVE,
+    };
+
     enum class KeyAction
     {
-        PRESS,
         RELEASE,
-        UNKNOWN,
+        PRESS,
+        REPEAT,
     };
 
     enum class Key
@@ -82,7 +91,13 @@ namespace glw
 
     struct WheelEvent
     {
-        int dx;
+        real dx;
+    };
+
+    struct CursorEvent
+    {
+        Point dp;
+        CursorAction action;
     };
 
     struct MoveEvent
@@ -123,6 +138,7 @@ namespace glw
         virtual void keyEvent(KeyEvent* e);
         virtual void mouseEvent(MouseEvent* e);
         virtual void wheelEvent(WheelEvent* e);
+        virtual void cursorEvent(CursorEvent* e);
         virtual void moveEvent(MoveEvent* e);
         virtual void resizeEvent(SizeEvent* e);
         virtual void closeEvent();

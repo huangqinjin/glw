@@ -56,6 +56,7 @@ struct Widget::ControlBlock : node
     GLFWwindow* w;
     std::string title;
     Point pos;
+    Point cur;
     Size sz;
     double ts;
     std::atomic<double> dt;
@@ -67,7 +68,7 @@ struct Widget::ControlBlock : node
 
     static void error(int err, const char* description)
     {
-        std::cout << "gl error[" << err << "]: " << description << std::endl;
+        std::cerr << "gl error[" << err << "]: " << description << std::endl;
     }
 
     static void paint(GLFWwindow* window)
@@ -96,23 +97,47 @@ struct Widget::ControlBlock : node
 
     static void wheel(GLFWwindow* window, double xoffset, double yoffset)
     {
-        WheelEvent e{ static_cast<int>(yoffset) };
+        WheelEvent e{ static_cast<real>(yoffset) };
         get(window)->wheelEvent(&e);
+    }
+
+    static void cursor(GLFWwindow* window, double xpos, double ypos)
+    {
+        Widget* w = get(window);
+        Point pos{ static_cast<real>(xpos), static_cast<real>(ypos) };
+        CursorEvent e{ {pos.x - w->cb->cur.x, pos.y - w->cb->cur.y}, CursorAction::MOVE };
+        if(e.dp.x != 0 || e.dp.y != 0)
+        {
+            w->cb->cur = pos;
+            w->cursorEvent(&e);
+        }
+    }
+
+    static void cursor(GLFWwindow* window, int entered)
+    {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        Widget* w = get(window);
+        CursorEvent e{ {0, 0}, entered ? CursorAction::ENTER : CursorAction::LEAVE };
+        w->cb->cur = { static_cast<real>(xpos), static_cast<real>(ypos) };
+        w->cursorEvent(&e);
     }
 
     static void move(GLFWwindow* window, int xpos, int ypos)
     {
         Widget* w = get(window);
-        MoveEvent e{ {xpos - w->cb->pos.x, ypos - w->cb->pos.y} };
-        w->cb->pos = {xpos, ypos};
+        Point pos{ static_cast<real>(xpos), static_cast<real>(ypos) };
+        MoveEvent e{ { pos.x - w->cb->pos.x, pos.y - w->cb->pos.y} };
+        w->cb->pos = pos;
         w->moveEvent(&e);
     }
 
     static void resize(GLFWwindow* window, int width, int height)
     {
         Widget* w = get(window);
-        SizeEvent e{ {width - w->cb->sz.w, height - w->cb->sz.h} };
-        w->cb->sz = {width, height};
+        Size sz{ static_cast<real>(width), static_cast<real>(height) };
+        SizeEvent e{ { sz.w - w->cb->sz.w, sz.h - w->cb->sz.h } };
+        w->cb->sz = sz;
         w->resizeEvent(&e);
     }
 
@@ -203,6 +228,8 @@ void Widget::show()
         glfwSetKeyCallback(cb->w, &ControlBlock::keyboard);
         glfwSetMouseButtonCallback(cb->w, &ControlBlock::mouse);
         glfwSetScrollCallback(cb->w, &ControlBlock::wheel);
+        glfwSetCursorPosCallback(cb->w, &ControlBlock::cursor);
+        glfwSetCursorEnterCallback(cb->w, &ControlBlock::cursor);
         glfwSetWindowPosCallback(cb->w, &ControlBlock::move);
         glfwSetWindowSizeCallback(cb->w, &ControlBlock::resize);
         glfwSetWindowCloseCallback(cb->w, &ControlBlock::close);
@@ -290,6 +317,7 @@ void Widget::paintEvent(PaintEvent* e) {}
 void Widget::keyEvent(KeyEvent* e) {}
 void Widget::mouseEvent(MouseEvent* e) {}
 void Widget::wheelEvent(WheelEvent* e) {}
+void Widget::cursorEvent(CursorEvent* e) {}
 void Widget::moveEvent(MoveEvent* e) {}
 void Widget::resizeEvent(SizeEvent* e) {}
 void Widget::closeEvent() { close(); }
