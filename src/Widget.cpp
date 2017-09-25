@@ -260,7 +260,7 @@ void Widget::restore()
 
 void Widget::maximize()
 {
-    //glfwMaximizeWindow(cb->w);
+    glfwMaximizeWindow(cb->w);
 }
 
 void Widget::close()
