@@ -73,7 +73,7 @@ struct Widget::ControlBlock : node
 
     static void paint(GLFWwindow* window)
     {
-     //   glfwMakeContextCurrent(window);
+        glfwMakeContextCurrent(window);
         Widget* w = get(window);
         double ts = glfwGetTime();
         PaintEvent e{ ts - w->cb->ts };

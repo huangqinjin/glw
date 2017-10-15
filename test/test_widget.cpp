@@ -60,37 +60,27 @@ private:
         glColor3fv(data[1]); glVertex3fv(data[1]);
         glColor3fv(data[2]); glVertex3fv(data[2]);
         glColor3fv(data[3]); glVertex3fv(data[3]);
-        glEnd();
 
-        glBegin(GL_QUADS);
         glColor3fv(data[2]); glVertex3fv(data[2]);
         glColor3fv(data[3]); glVertex3fv(data[3]);
         glColor3fv(data[4]); glVertex3fv(data[4]);
         glColor3fv(data[7]); glVertex3fv(data[7]);
-        glEnd();
 
-        glBegin(GL_QUADS);
         glColor3fv(data[4]); glVertex3fv(data[4]);
         glColor3fv(data[7]); glVertex3fv(data[7]);
         glColor3fv(data[6]); glVertex3fv(data[6]);
         glColor3fv(data[5]); glVertex3fv(data[5]);
-        glEnd();
 
-        glBegin(GL_QUADS);
         glColor3fv(data[6]); glVertex3fv(data[6]);
         glColor3fv(data[5]); glVertex3fv(data[5]);
         glColor3fv(data[0]); glVertex3fv(data[0]);
         glColor3fv(data[1]); glVertex3fv(data[1]);
-        glEnd();
 
-        glBegin(GL_QUADS);
         glColor3fv(data[0]); glVertex3fv(data[0]);
         glColor3fv(data[3]); glVertex3fv(data[3]);
         glColor3fv(data[4]); glVertex3fv(data[4]);
         glColor3fv(data[5]); glVertex3fv(data[5]);
-        glEnd();
 
-        glBegin(GL_QUADS);
         glColor3fv(data[1]); glVertex3fv(data[1]);
         glColor3fv(data[2]); glVertex3fv(data[2]);
         glColor3fv(data[7]); glVertex3fv(data[7]);
