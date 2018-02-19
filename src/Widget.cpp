@@ -221,8 +221,9 @@ void Widget::show()
 {
     if(!cb->w)
     {
-        cb->w = glfwCreateWindow(cb->sz.w, cb->sz.h, cb->title.c_str(), nullptr, nullptr);
-        glfwSetWindowPos(cb->w, cb->pos.x, cb->pos.y);
+        cb->w = glfwCreateWindow(static_cast<int>(cb->sz.w), static_cast<int>(cb->sz.h),
+                                 cb->title.c_str(), nullptr, nullptr);
+        glfwSetWindowPos(cb->w, static_cast<int>(cb->pos.x), static_cast<int>(cb->pos.y));
         glfwSetWindowUserPointer(cb->w, this);
         glfwSetWindowRefreshCallback(cb->w, &ControlBlock::paint);
         glfwSetKeyCallback(cb->w, &ControlBlock::keyboard);
@@ -292,7 +293,7 @@ Size Widget::size() const
 
 void Widget::resize(Size sz)
 {
-    if(cb->w) glfwSetWindowSize(cb->w, sz.w, sz.h);
+    if(cb->w) glfwSetWindowSize(cb->w, static_cast<int>(sz.w), static_cast<int>(sz.h));
     else cb->sz = sz;
 }
 
@@ -303,7 +304,7 @@ Point Widget::pos() const
 
 void Widget::move(Point pos)
 {
-    if(cb->w) glfwSetWindowPos(cb->w, pos.x, pos.y);
+    if(cb->w) glfwSetWindowPos(cb->w, static_cast<int>(pos.x), static_cast<int>(pos.y));
     else cb->pos = pos;
 }
 
