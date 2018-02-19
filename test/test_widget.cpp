@@ -1,11 +1,10 @@
 //
 // Created by huangqinjin on 7/18/17.
 //
-
 #include <glw/Widget.hpp>
-#include <iostream>
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <Eigen/Geometry>
+#include <iostream>
 
 using namespace glw;
 using namespace Eigen;
@@ -155,7 +154,7 @@ private:
     void resizeEvent(SizeEvent* e) override
     {
         auto sz = size();
-        auto s = static_cast<GLsizei>(std::min(sz.w, sz.h));
+        auto s = static_cast<GLsizei>((std::min)(sz.w, sz.h));
         glViewport(0, 0, s, s);
 
         std::cout << "resize " << e->dz.w << ' ' << e->dz.h << std::endl;

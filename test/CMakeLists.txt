@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.1)
+project(test_widget)
 
 find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
 find_package(Eigen3 REQUIRED)
-add_executable(test_widget test_widget.cpp)
-target_include_directories(test_widget PRIVATE ${OPENGL_INCLUDE_DIR})
-target_link_libraries(test_widget PRIVATE glw::glw Eigen3::Eigen ${OPENGL_LIBRARIES})
+add_executable(${PROJECT_NAME} test_widget.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE glw::glw Eigen3::Eigen GLEW::GLEW)
+
+if(CMAKE_VERSION VERSION_LESS 3.8)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIR})
+	target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES})
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
+endif()
