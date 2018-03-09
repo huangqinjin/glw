@@ -67,6 +67,7 @@ namespace glw
         N0 = '0', N1, N2, N3, N4, N5, N6, N7, N8, N9,
         F1 = 290, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
         ESC = 256, ENTER, TAB, BACKSPACE, INSERT, DELETE, RIGHT, LEFT, DOWN, UP,
+        LSHIFT = 340, LCONTROL, LALT, LSUPER, RSHIFT, RCONTROL, RALT, RSUPER,
     };
 
     struct PaintEvent
@@ -134,6 +135,7 @@ namespace glw
 
     public:
         KeyAction status(MouseButton button) const;
+        KeyAction status(Key key) const;
 
     private:
         virtual void initialize();

@@ -318,12 +318,17 @@ KeyAction Widget::status(MouseButton button) const
     return static_cast<KeyAction>(glfwGetMouseButton(cb->w, static_cast<int>(button)));
 }
 
+KeyAction Widget::status(Key key) const
+{
+    return static_cast<KeyAction>(glfwGetKey(cb->w, static_cast<int>(key)));
+}
+
 void Widget::initialize() {}
-void Widget::paintEvent(PaintEvent* e) {}
-void Widget::keyEvent(KeyEvent* e) {}
-void Widget::mouseEvent(MouseEvent* e) {}
-void Widget::wheelEvent(WheelEvent* e) {}
-void Widget::cursorEvent(CursorEvent* e) {}
-void Widget::moveEvent(MoveEvent* e) {}
-void Widget::resizeEvent(SizeEvent* e) {}
+void Widget::paintEvent(PaintEvent*) {}
+void Widget::keyEvent(KeyEvent*) {}
+void Widget::mouseEvent(MouseEvent*) {}
+void Widget::wheelEvent(WheelEvent*) {}
+void Widget::cursorEvent(CursorEvent*) {}
+void Widget::moveEvent(MoveEvent*) {}
+void Widget::resizeEvent(SizeEvent*) {}
 void Widget::closeEvent() { close(); }
