@@ -5,7 +5,6 @@
 #include <glw/Widget.hpp>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <cfloat>
 #include <atomic>
 
 using namespace glw;
@@ -58,8 +57,10 @@ struct Widget::ControlBlock : node
     Point pos;
     Point cur;
     Size sz;
-    double ts;
-    std::atomic<double> dt;
+    uint64_t ts;
+
+    // Events
+    std::atomic<uint64_t> refresh = -1;
 
     static Widget* get(GLFWwindow* window)
     {
@@ -75,10 +76,10 @@ struct Widget::ControlBlock : node
     {
         glfwMakeContextCurrent(window);
         Widget* w = get(window);
-        double ts = glfwGetTime();
-        PaintEvent e{ ts - w->cb->ts };
-        w->cb->ts = ts;
-        w->cb->dt.store(DBL_MAX, std::memory_order_relaxed);
+        uint64_t now = glfwGetTimerValue();
+        PaintEvent e{ (now - w->cb->ts) * 1.0 / glfwGetTimerFrequency() };
+        w->cb->ts = now;
+        w->cb->refresh.store(-1, std::memory_order_relaxed);
         w->paintEvent(&e);
         glfwSwapBuffers(window);
     }
@@ -178,6 +179,7 @@ int Application::exec()
     while(true)
     {
         unsigned c = 0;
+        uint64_t ts = -1;
         node* p = widgets.next;
         while(p != &widgets)
         {
@@ -185,14 +187,34 @@ int Application::exec()
             if(cb->w)
             {
                 ++c;
-                if(cb->dt.load(std::memory_order_relaxed) <= glfwGetTime() - cb->ts)
-                    cb->paint(cb->w);
+                uint64_t now = glfwGetTimerValue();
+                uint64_t refresh = cb->refresh.load(std::memory_order_relaxed);
+                if(refresh <= now) cb->paint(cb->w);
+                else if(refresh < ts) ts = refresh;
             }
             p = p->next;
         }
 
-        if(c == 0) break;
-        glfwPollEvents();
+        if(c == 0)
+        {
+            break;
+        }
+        else if(ts == -1)
+        {
+            glfwWaitEvents();
+        }
+        else
+        {
+            uint64_t now = glfwGetTimerValue();
+            if(now > ts)
+            {
+                glfwWaitEventsTimeout((now - ts) * 1.0 / glfwGetTimerFrequency());
+            }
+            else
+            {
+                glfwPollEvents();
+            }
+        }
     }
     return 0;
 }
@@ -200,7 +222,7 @@ int Application::exec()
 Widget::Widget() : cb(new ControlBlock{})
 {
     cb->sz = {100, 100};
-    std::atomic_init(&cb->dt, DBL_MAX);
+    cb->pos = {100, 100};
     widgets.add(cb);
 }
 
@@ -234,7 +256,7 @@ void Widget::show()
         glfwSetWindowPosCallback(cb->w, &ControlBlock::move);
         glfwSetWindowSizeCallback(cb->w, &ControlBlock::resize);
         glfwSetWindowCloseCallback(cb->w, &ControlBlock::close);
-        cb->ts = glfwGetTime();
+        cb->ts = glfwGetTimerValue();
         glfwMakeContextCurrent(cb->w);
         glfwSwapInterval(1);
         initialize();
@@ -310,7 +332,9 @@ void Widget::move(Point pos)
 
 void Widget::repaint(double dt)
 {
-    cb->dt.store(dt, std::memory_order_relaxed);
+    cb->refresh.store(dt <= 0 ? 0 : 
+        glfwGetTimerValue() + (uint64_t)(dt * glfwGetTimerFrequency()),
+        std::memory_order_relaxed);
 }
 
 KeyAction Widget::status(MouseButton button) const
