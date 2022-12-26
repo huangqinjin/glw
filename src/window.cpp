@@ -11,6 +11,13 @@
 #include <string>
 #include <atomic>
 
+#ifdef GLW_IMGUI
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include "implot.h"
+#endif
+
 using namespace glw;
 
 namespace
@@ -66,6 +73,11 @@ struct Window::ControlBlock : node
     // Events
     std::atomic<uint64_t> refresh{ uint64_t(-1) };
 
+#ifdef GLW_IMGUI
+    ImGuiContext* imgui = nullptr;
+    ImPlotContext* implot = nullptr;
+#endif
+
     static Window* get(GLFWwindow* window)
     {
         return (Window*)glfwGetWindowUserPointer(window);
@@ -76,6 +88,23 @@ struct Window::ControlBlock : node
         std::cerr << "gl error[" << err << "]: " << description << std::endl;
     }
 
+    static void focus(GLFWwindow* window, int focused)
+    {
+        Window* w = get(window);
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_WindowFocusCallback(window, focused);
+        }
+#endif
+
+        (void)w;
+        (void)focused;
+    }
+
     static void paint(GLFWwindow* window)
     {
         glfwMakeContextCurrent(window);
@@ -84,26 +113,97 @@ struct Window::ControlBlock : node
         PaintEvent e{ (now - w->cb->ts) * 1.0 / glfwGetTimerFrequency() };
         w->cb->ts = now;
         w->cb->refresh.store(-1, std::memory_order_relaxed);
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+        }
+#endif
+
         w->paintEvent(&e);
+
+#ifdef GLW_IMGUI
+        if (w->cb->imgui)
+        {
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+#endif
+
         glfwSwapBuffers(window);
     }
 
     static void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
+        Window* w = get(window);
         KeyEvent e{ static_cast<Key>(key), static_cast<KeyAction>(action), scancode, mods };
-        get(window)->keyEvent(&e);
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+        }
+#endif
+
+        w->keyEvent(&e);
+    }
+
+    static void unicode(GLFWwindow* window, unsigned int codepoint)
+    {
+        Window* w = get(window);
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_CharCallback(window, codepoint);
+        }
+#endif
+
+        (void)w;
+        (void)codepoint;
     }
 
     static void mouse(GLFWwindow* window, int button, int action, int mods)
     {
+        Window* w = get(window);
         MouseEvent e{ static_cast<MouseButton>(button), static_cast<KeyAction>(action), mods };
-        get(window)->mouseEvent(&e);
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+        }
+#endif
+
+        w->mouseEvent(&e);
     }
 
     static void wheel(GLFWwindow* window, double xoffset, double yoffset)
     {
+        Window* w = get(window);
         WheelEvent e{ static_cast<real>(yoffset) };
-        get(window)->wheelEvent(&e);
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+        }
+#endif
+
+        w->wheelEvent(&e);
     }
 
     static void cursor(GLFWwindow* window, double xpos, double ypos)
@@ -111,6 +211,16 @@ struct Window::ControlBlock : node
         Window* w = get(window);
         Point pos{ static_cast<real>(xpos), static_cast<real>(ypos) };
         CursorEvent e{ {pos.x - w->cb->cur.x, pos.y - w->cb->cur.y}, CursorAction::MOVE };
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+        }
+#endif
+
         if(e.dp.x != 0 || e.dp.y != 0)
         {
             w->cb->cur = pos;
@@ -125,6 +235,16 @@ struct Window::ControlBlock : node
         Window* w = get(window);
         CursorEvent e{ {0, 0}, entered ? CursorAction::ENTER : CursorAction::LEAVE };
         w->cb->cur = { static_cast<real>(xpos), static_cast<real>(ypos) };
+
+#ifdef GLW_IMGUI
+        ImGui::SetCurrentContext(w->cb->imgui);
+        ImPlot::SetCurrentContext(w->cb->implot);
+        if (w->cb->imgui)
+        {
+            ImGui_ImplGlfw_CursorEnterCallback(window, entered);
+        }
+#endif
+
         w->cursorEvent(&e);
     }
 
@@ -240,6 +360,21 @@ Window::~Window()
 
 void Window::destroy()
 {
+#ifdef GLW_IMGUI
+    if (cb->imgui)
+    {
+        glfwMakeContextCurrent(cb->w);
+        ImGui::SetCurrentContext(cb->imgui);
+        ImPlot::SetCurrentContext(cb->implot);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImPlot::DestroyContext();
+        ImGui::DestroyContext();
+        cb->implot = nullptr;
+        cb->imgui = nullptr;
+    }
+#endif
+
     glfwDestroyWindow(cb->w);
     cb->w = nullptr;
 }
@@ -252,8 +387,10 @@ void Window::show()
                                  cb->title.c_str(), nullptr, nullptr);
         glfwSetWindowPos(cb->w, static_cast<int>(cb->pos.x), static_cast<int>(cb->pos.y));
         glfwSetWindowUserPointer(cb->w, this);
+        glfwSetWindowFocusCallback(cb->w, &ControlBlock::focus);
         glfwSetWindowRefreshCallback(cb->w, &ControlBlock::paint);
         glfwSetKeyCallback(cb->w, &ControlBlock::keyboard);
+        glfwSetCharCallback(cb->w, &ControlBlock::unicode);
         glfwSetMouseButtonCallback(cb->w, &ControlBlock::mouse);
         glfwSetScrollCallback(cb->w, &ControlBlock::wheel);
         glfwSetCursorPosCallback(cb->w, &ControlBlock::cursor);
@@ -264,6 +401,18 @@ void Window::show()
         cb->ts = glfwGetTimerValue();
         glfwMakeContextCurrent(cb->w);
         glfwSwapInterval(1);
+
+        // https://stackoverflow.com/questions/29617370/multiple-opengl-contexts-multiple-windows-multithreading-and-vsync
+
+#ifdef GLW_IMGUI
+        cb->imgui = ImGui::CreateContext();
+        cb->implot = ImPlot::CreateContext();
+        ImGui::SetCurrentContext(cb->imgui);
+        ImPlot::SetCurrentContext(cb->implot);
+        ImGui_ImplGlfw_InitForOpenGL(cb->w, false);
+        ImGui_ImplOpenGL3_Init("#version 330 core");
+#endif
+
         initialize();
         SizeEvent e{ cb->sz };
         resizeEvent(&e);
