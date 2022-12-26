@@ -1,13 +1,14 @@
 //
-// Copyright (c) 2017-2021 Huang Qinjin (huangqinjin@gmail.com)
+// Copyright (c) 2017-2023 Huang Qinjin (huangqinjin@gmail.com)
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 //
-#include <glw/Widget.hpp>
+#include <glw/window.hpp>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <string>
 #include <atomic>
 
 using namespace glw;
@@ -50,10 +51,10 @@ namespace
                 }
             }
         }
-    } widgets;
+    } windows;
 }
 
-struct Widget::ControlBlock : node
+struct Window::ControlBlock : node
 {
     GLFWwindow* w;
     std::string title;
@@ -63,11 +64,11 @@ struct Widget::ControlBlock : node
     uint64_t ts;
 
     // Events
-    std::atomic<uint64_t> refresh = -1;
+    std::atomic<uint64_t> refresh{ uint64_t(-1) };
 
-    static Widget* get(GLFWwindow* window)
+    static Window* get(GLFWwindow* window)
     {
-        return (Widget*)glfwGetWindowUserPointer(window);
+        return (Window*)glfwGetWindowUserPointer(window);
     }
 
     static void error(int err, const char* description)
@@ -78,7 +79,7 @@ struct Widget::ControlBlock : node
     static void paint(GLFWwindow* window)
     {
         glfwMakeContextCurrent(window);
-        Widget* w = get(window);
+        Window* w = get(window);
         uint64_t now = glfwGetTimerValue();
         PaintEvent e{ (now - w->cb->ts) * 1.0 / glfwGetTimerFrequency() };
         w->cb->ts = now;
@@ -107,7 +108,7 @@ struct Widget::ControlBlock : node
 
     static void cursor(GLFWwindow* window, double xpos, double ypos)
     {
-        Widget* w = get(window);
+        Window* w = get(window);
         Point pos{ static_cast<real>(xpos), static_cast<real>(ypos) };
         CursorEvent e{ {pos.x - w->cb->cur.x, pos.y - w->cb->cur.y}, CursorAction::MOVE };
         if(e.dp.x != 0 || e.dp.y != 0)
@@ -121,7 +122,7 @@ struct Widget::ControlBlock : node
     {
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
-        Widget* w = get(window);
+        Window* w = get(window);
         CursorEvent e{ {0, 0}, entered ? CursorAction::ENTER : CursorAction::LEAVE };
         w->cb->cur = { static_cast<real>(xpos), static_cast<real>(ypos) };
         w->cursorEvent(&e);
@@ -129,7 +130,7 @@ struct Widget::ControlBlock : node
 
     static void move(GLFWwindow* window, int xpos, int ypos)
     {
-        Widget* w = get(window);
+        Window* w = get(window);
         Point pos{ static_cast<real>(xpos), static_cast<real>(ypos) };
         MoveEvent e{ { pos.x - w->cb->pos.x, pos.y - w->cb->pos.y} };
         w->cb->pos = pos;
@@ -138,7 +139,7 @@ struct Widget::ControlBlock : node
 
     static void resize(GLFWwindow* window, int width, int height)
     {
-        Widget* w = get(window);
+        Window* w = get(window);
         Size sz{ static_cast<real>(width), static_cast<real>(height) };
         SizeEvent e{ { sz.w - w->cb->sz.w, sz.h - w->cb->sz.h } };
         w->cb->sz = sz;
@@ -160,10 +161,11 @@ Application::Application(int argc, char* argv[])
         std::terminate();
     }
 
-    glfwSetErrorCallback(&Widget::ControlBlock::error);
+    glfwSetErrorCallback(&Window::ControlBlock::error);
     glfwWindowHint(GLFW_VISIBLE, 0);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
     glfwWindowHint(GLFW_REFRESH_RATE, 1);
 }
 
@@ -183,10 +185,10 @@ int Application::exec()
     {
         unsigned c = 0;
         uint64_t ts = -1;
-        node* p = widgets.next;
-        while(p != &widgets)
+        node* p = windows.next;
+        while(p != &windows)
         {
-            auto cb = static_cast<Widget::ControlBlock*>(p);
+            auto cb = static_cast<Window::ControlBlock*>(p);
             if(cb->w)
             {
                 ++c;
@@ -222,27 +224,27 @@ int Application::exec()
     return 0;
 }
 
-Widget::Widget() : cb(new ControlBlock{})
+Window::Window() : cb(new ControlBlock{})
 {
     cb->sz = {100, 100};
     cb->pos = {100, 100};
-    widgets.add(cb);
+    windows.add(cb);
 }
 
-Widget::~Widget()
+Window::~Window()
 {
     destroy();
-    widgets.remove(cb);
+    windows.remove(cb);
     delete cb;
 }
 
-void Widget::destroy()
+void Window::destroy()
 {
     glfwDestroyWindow(cb->w);
     cb->w = nullptr;
 }
 
-void Widget::show()
+void Window::show()
 {
     if(!cb->w)
     {
@@ -269,71 +271,66 @@ void Widget::show()
     glfwShowWindow(cb->w);
 }
 
-void Widget::hide()
+void Window::hide()
 {
     glfwHideWindow(cb->w);
 }
 
-void Widget::minimize()
+void Window::minimize()
 {
     glfwIconifyWindow(cb->w);
 }
 
-void Widget::restore()
+void Window::restore()
 {
     glfwRestoreWindow(cb->w);
 }
 
-void Widget::maximize()
+void Window::maximize()
 {
     glfwMaximizeWindow(cb->w);
 }
 
-void Widget::close()
+void Window::close()
 {
     if(glfwWindowShouldClose(cb->w)) destroy();
     else glfwSetWindowShouldClose(cb->w, 1);
 }
 
-const std::string& Widget::name() const
+const char* Window::name() const
 {
-    return cb->title;
+    return cb->title.c_str();
 }
 
-void Widget::rename(const char* title)
+void Window::rename(const char* title)
 {
     if(cb->w) glfwSetWindowTitle(cb->w, title);
     cb->title = title;
 }
 
-void Widget::rename(const std::string& title)
-{
-    rename(title.c_str());
-}
-
-Size Widget::size() const
+Size Window::size() const
 {
     return cb->sz;
 }
 
-void Widget::resize(Size sz)
+void Window::resize(Size sz)
 {
     if(cb->w) glfwSetWindowSize(cb->w, static_cast<int>(sz.w), static_cast<int>(sz.h));
     else cb->sz = sz;
 }
 
-Point Widget::pos() const
+Point Window::pos() const
 {
     return cb->pos;
 }
 
-void Widget::move(Point pos)
+void Window::move(Point pos)
 {
     if(cb->w) glfwSetWindowPos(cb->w, static_cast<int>(pos.x), static_cast<int>(pos.y));
     else cb->pos = pos;
 }
 
-void Widget::repaint(double dt)
+void Window::repaint(double dt)
 {
     cb->refresh.store(dt <= 0 ? 0 :
         glfwGetTimerValue() + (uint64_t)(dt * glfwGetTimerFrequency()),
@@ -341,22 +338,22 @@ void Widget::repaint(double dt)
     glfwPostEmptyEvent();
 }
 
-KeyAction Widget::status(MouseButton button) const
+KeyAction Window::status(MouseButton button) const
 {
     return static_cast<KeyAction>(glfwGetMouseButton(cb->w, static_cast<int>(button)));
 }
 
-KeyAction Widget::status(Key key) const
+KeyAction Window::status(Key key) const
 {
     return static_cast<KeyAction>(glfwGetKey(cb->w, static_cast<int>(key)));
 }
 
-void Widget::initialize() {}
-void Widget::paintEvent(PaintEvent*) {}
-void Widget::keyEvent(KeyEvent*) {}
-void Widget::mouseEvent(MouseEvent*) {}
-void Widget::wheelEvent(WheelEvent*) {}
-void Widget::cursorEvent(CursorEvent*) {}
-void Widget::moveEvent(MoveEvent*) {}
-void Widget::resizeEvent(SizeEvent*) {}
-void Widget::closeEvent() { close(); }
+void Window::initialize() {}
+void Window::paintEvent(PaintEvent*) {}
+void Window::keyEvent(KeyEvent*) {}
+void Window::mouseEvent(MouseEvent*) {}
+void Window::wheelEvent(WheelEvent*) {}
+void Window::cursorEvent(CursorEvent*) {}
+void Window::moveEvent(MoveEvent*) {}
+void Window::resizeEvent(SizeEvent*) {}
+void Window::closeEvent() { close(); }

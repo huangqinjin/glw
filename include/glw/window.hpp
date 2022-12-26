@@ -1,14 +1,12 @@
 //
-// Copyright (c) 2017-2021 Huang Qinjin (huangqinjin@gmail.com)
+// Copyright (c) 2017-2023 Huang Qinjin (huangqinjin@gmail.com)
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 //
-#ifndef GLW_WIDGET_HPP
-#define GLW_WIDGET_HPP
-
-#include <string>
+#ifndef GLW_WINDOW_HPP
+#define GLW_WINDOW_HPP
 
 namespace glw
 {
@@ -114,11 +112,11 @@ namespace glw
         Size dz;
     };
 
-    class Widget
+    class Window
     {
     public:
-        Widget();
-        virtual ~Widget();
+        Window();
+        virtual ~Window();
 
         void destroy();
         void show();
@@ -127,9 +125,8 @@ namespace glw
         void restore();
         void maximize();
         void close();
-        const std::string& name() const;
+        const char* name() const;
         void rename(const char* title);
-        void rename(const std::string& title);
         Size size() const;
         void resize(Size sz);
         Point pos() const;
@@ -159,4 +156,4 @@ namespace glw
 }
 
 
-#endif //GLW_WIDGET_HPP
+#endif //GLW_WINDOW_HPP

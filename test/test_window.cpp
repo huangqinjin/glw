@@ -1,7 +1,4 @@
-//
-// Created by huangqinjin on 7/18/17.
-//
-#include <glw/Widget.hpp>
+#include <glw/window.hpp>
 #include <GL/glew.h>
 #include <Eigen/Geometry>
 #include <iostream>
@@ -9,7 +6,7 @@
 using namespace glw;
 using namespace Eigen;
 
-class MainWindow : public Widget
+class MainWindow : public Window
 {
     const bool orth;
     Affine3f T = Affine3f::Identity();
