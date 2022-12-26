@@ -8,11 +8,15 @@
 #ifndef GLW_WINDOW_HPP
 #define GLW_WINDOW_HPP
 
+#ifndef GLW_API
+#define GLW_API
+#endif
+
 namespace glw
 {
     using real = float;
 
-    class Application
+    class GLW_API Application
     {
     public:
         Application();
@@ -112,7 +116,7 @@ namespace glw
         Size dz;
     };
 
-    class Window
+    class GLW_API Window
     {
     public:
         Window();
