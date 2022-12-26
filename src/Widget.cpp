@@ -209,9 +209,9 @@ int Application::exec()
         else
         {
             uint64_t now = glfwGetTimerValue();
-            if(now > ts)
+            if(now < ts)
             {
-                glfwWaitEventsTimeout((now - ts) * 1.0 / glfwGetTimerFrequency());
+                glfwWaitEventsTimeout((ts - now) * 1.0 / glfwGetTimerFrequency());
             }
             else
             {
@@ -335,9 +335,10 @@ void Widget::move(Point pos)
 
 void Widget::repaint(double dt)
 {
-    cb->refresh.store(dt <= 0 ? 0 : 
+    cb->refresh.store(dt <= 0 ? 0 :
         glfwGetTimerValue() + (uint64_t)(dt * glfwGetTimerFrequency()),
         std::memory_order_relaxed);
+    glfwPostEmptyEvent();
 }
 
 KeyAction Widget::status(MouseButton button) const
