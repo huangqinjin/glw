@@ -1,6 +1,7 @@
 #include <glw/window.hpp>
-#include <GL/glew.h>
+#include <glw/gl.hpp>
 #include <Eigen/Geometry>
+#include <unsupported/Eigen/OpenGLSupport>
 #include <iostream>
 
 using namespace glw;
@@ -17,15 +18,15 @@ public:
 private:
     void initialize() override
     {
-        glClearColor(0, 0, 0, 0);
-        glShadeModel(GL_SMOOTH);
-        glEnable(GL_DEPTH_TEST);
+        gl::ClearColor({ gl::nf32{0}, gl::nf32{0}, gl::nf32{0}, gl::nf32{0} });
+        gl::ShadeModel(gl::ShadingModel::SMOOTH);
+        gl::Enable(gl::EnableCap::DEPTH_TEST);
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        if(orth) glOrtho(-1, 1, -1, 1, 1, 3 /* -1 */);
-        else glFrustum(-1.0, 1.0, -1.0, 1.0, 1, 100);
-        glMatrixMode(GL_MODELVIEW);
+        gl::MatrixMode(gl::MatrixMode::PROJECTION);
+        gl::LoadIdentity();
+        if(orth) gl::Ortho(gl::f64{-1}, gl::f64{1}, gl::f64{-1}, gl::f64{1}, gl::f64{1}, gl::f64{3/* -1 */});
+        else gl::Frustum(gl::f64{-1}, gl::f64{1}, gl::f64{-1}, gl::f64{1}, gl::f64{1}, gl::f64{100});
+        gl::MatrixMode(gl::MatrixMode::MODELVIEW);
 
         T = Translation3f(0, 0, -2.f);
 
@@ -35,10 +36,10 @@ private:
     void paintEvent(PaintEvent* e) override
     {
         // Clear the screen.
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gl::Clear(gl::ClearBufferMask::COLOR | gl::ClearBufferMask::DEPTH);
 
-        glLoadMatrixf(T.data());
-        glTranslatef(-0.5f, -0.5f, -0.5f);
+        Eigen::glLoadMatrix(T);
+        Eigen::glTranslate(Vector3d::Constant(-0.5f));
 
         GLfloat data[8][3] = {
                 {0, 0, 0},
@@ -51,37 +52,37 @@ private:
                 {1, 1, 1},
         };
 
-        glBegin(GL_QUADS);
-        glColor3fv(data[0]); glVertex3fv(data[0]);
-        glColor3fv(data[1]); glVertex3fv(data[1]);
-        glColor3fv(data[2]); glVertex3fv(data[2]);
-        glColor3fv(data[3]); glVertex3fv(data[3]);
+        gl::Begin(gl::PrimitiveType::QUADS);
+        gl::Color<gl::nf32>(data[0]); gl::Vertex<gl::f32>(data[0]);
+        gl::Color<gl::nf32>(data[1]); gl::Vertex<gl::f32>(data[1]);
+        gl::Color<gl::nf32>(data[2]); gl::Vertex<gl::f32>(data[2]);
+        gl::Color<gl::nf32>(data[3]); gl::Vertex<gl::f32>(data[3]);
 
-        glColor3fv(data[2]); glVertex3fv(data[2]);
-        glColor3fv(data[3]); glVertex3fv(data[3]);
-        glColor3fv(data[4]); glVertex3fv(data[4]);
-        glColor3fv(data[7]); glVertex3fv(data[7]);
+        gl::Color<gl::nf32>(data[2]); gl::Vertex<gl::f32>(data[2]);
+        gl::Color<gl::nf32>(data[3]); gl::Vertex<gl::f32>(data[3]);
+        gl::Color<gl::nf32>(data[4]); gl::Vertex<gl::f32>(data[4]);
+        gl::Color<gl::nf32>(data[7]); gl::Vertex<gl::f32>(data[7]);
 
-        glColor3fv(data[4]); glVertex3fv(data[4]);
-        glColor3fv(data[7]); glVertex3fv(data[7]);
-        glColor3fv(data[6]); glVertex3fv(data[6]);
-        glColor3fv(data[5]); glVertex3fv(data[5]);
+        gl::Color<gl::nf32>(data[4]); gl::Vertex<gl::f32>(data[4]);
+        gl::Color<gl::nf32>(data[7]); gl::Vertex<gl::f32>(data[7]);
+        gl::Color<gl::nf32>(data[6]); gl::Vertex<gl::f32>(data[6]);
+        gl::Color<gl::nf32>(data[5]); gl::Vertex<gl::f32>(data[5]);
 
-        glColor3fv(data[6]); glVertex3fv(data[6]);
-        glColor3fv(data[5]); glVertex3fv(data[5]);
-        glColor3fv(data[0]); glVertex3fv(data[0]);
-        glColor3fv(data[1]); glVertex3fv(data[1]);
+        gl::Color<gl::nf32>(data[6]); gl::Vertex<gl::f32>(data[6]);
+        gl::Color<gl::nf32>(data[5]); gl::Vertex<gl::f32>(data[5]);
+        gl::Color<gl::nf32>(data[0]); gl::Vertex<gl::f32>(data[0]);
+        gl::Color<gl::nf32>(data[1]); gl::Vertex<gl::f32>(data[1]);
 
-        glColor3fv(data[0]); glVertex3fv(data[0]);
-        glColor3fv(data[3]); glVertex3fv(data[3]);
-        glColor3fv(data[4]); glVertex3fv(data[4]);
-        glColor3fv(data[5]); glVertex3fv(data[5]);
+        gl::Color<gl::nf32>(data[0]); gl::Vertex<gl::f32>(data[0]);
+        gl::Color<gl::nf32>(data[3]); gl::Vertex<gl::f32>(data[3]);
+        gl::Color<gl::nf32>(data[4]); gl::Vertex<gl::f32>(data[4]);
+        gl::Color<gl::nf32>(data[5]); gl::Vertex<gl::f32>(data[5]);
 
-        glColor3fv(data[1]); glVertex3fv(data[1]);
-        glColor3fv(data[2]); glVertex3fv(data[2]);
-        glColor3fv(data[7]); glVertex3fv(data[7]);
-        glColor3fv(data[6]); glVertex3fv(data[6]);
-        glEnd();
+        gl::Color<gl::nf32>(data[1]); gl::Vertex<gl::f32>(data[1]);
+        gl::Color<gl::nf32>(data[2]); gl::Vertex<gl::f32>(data[2]);
+        gl::Color<gl::nf32>(data[7]); gl::Vertex<gl::f32>(data[7]);
+        gl::Color<gl::nf32>(data[6]); gl::Vertex<gl::f32>(data[6]);
+        gl::End();
 
         // Draw the scene:
 //        glBegin(GL_TRIANGLES);
@@ -152,7 +153,7 @@ private:
     {
         auto sz = size();
         auto s = static_cast<GLsizei>((std::min)(sz.w, sz.h));
-        glViewport(0, 0, s, s);
+        gl::Viewport({ gl::s32{0}, gl::s32{0} }, { gl::sz{s}, gl::sz{s} });
 
         std::cout << "resize " << e->dz.w << ' ' << e->dz.h << std::endl;
     }

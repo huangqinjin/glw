@@ -56,6 +56,9 @@ if(GLW_IMGUI)
             "#define IMGUI_API GLW_API\n"
             "#define IMPLOT_API GLW_API\n"
         )
+        file(READ ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp FILE_CONTENTS)
+        string(REPLACE [["imgui_impl_opengl3_loader.h"]] "\n#else\n#include <glw/gl.h>" FILE_CONTENTS "${FILE_CONTENTS}")
+        file(WRITE ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp "${FILE_CONTENTS}")
     endif()
 
     FetchContent_GetProperties(implot)
@@ -68,6 +71,7 @@ if(GLW_IMGUI)
     target_include_directories(glw PRIVATE ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_include_directories(glw PRIVATE ${implot_SOURCE_DIR})
     target_compile_definitions(glw PRIVATE [[IMGUI_USER_CONFIG=<glw/imconfig.h>]])
+    target_compile_definitions(glw PRIVATE IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
 
     target_sources(glw PRIVATE
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp

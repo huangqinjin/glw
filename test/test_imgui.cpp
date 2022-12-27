@@ -1,7 +1,7 @@
 #include <glw/window.hpp>
+#include <glw/gl.h>
 #include <glw/imgui.h>
 #include <glw/implot.h>
-#include <GL/glew.h>
 
 using namespace glw;
 

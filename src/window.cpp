@@ -5,6 +5,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 //
+#define GLFW_INCLUDE_NONE
 #include <glw/window.hpp>
 #include <GLFW/glfw3.h>
 #include <iostream>
