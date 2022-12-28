@@ -21,6 +21,14 @@
 
 using namespace glw;
 
+#ifndef GLW_COMPATIBLE_PROFILE
+#ifdef __APPLE__
+#define GLW_COMPATIBLE_PROFILE 0
+#else
+#define GLW_COMPATIBLE_PROFILE 1
+#endif
+#endif
+
 namespace
 {
     struct node
@@ -284,10 +292,20 @@ Application::Application(int argc, char* argv[])
 
     glfwSetErrorCallback(&Window::ControlBlock::error);
     glfwWindowHint(GLFW_VISIBLE, 0);
+    glfwWindowHint(GLFW_REFRESH_RATE, 1);
+#if defined(__APPLE__) && GLW_COMPATIBLE_PROFILE
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+#elif GLW_COMPATIBLE_PROFILE
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-    glfwWindowHint(GLFW_REFRESH_RATE, 1);
+#else
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#endif
 }
 
 Application::~Application()
@@ -411,7 +429,11 @@ void Window::show()
         ImGui::SetCurrentContext(cb->imgui);
         ImPlot::SetCurrentContext(cb->implot);
         ImGui_ImplGlfw_InitForOpenGL(cb->w, false);
+#if defined(__APPLE__) && GLW_COMPATIBLE_PROFILE
+        ImGui_ImplOpenGL3_Init("#version 120");
+#else
         ImGui_ImplOpenGL3_Init("#version 330 core");
+#endif
 #endif
 
         initialize();
