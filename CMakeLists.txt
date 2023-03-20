@@ -47,35 +47,27 @@ if(GLW_IMGUI)
         GIT_TAG        master
     )
 
-    FetchContent_GetProperties(imgui)
-    if(NOT imgui_POPULATED)
-        FetchContent_Populate(imgui)
-        file(COPY_FILE ${imgui_SOURCE_DIR}/imgui.h ${PROJECT_SOURCE_DIR}/include/glw/imgui.h ONLY_IF_DIFFERENT)
-        file(READ ${imgui_SOURCE_DIR}/imconfig.h FILE_CONTENTS)
-        file(WRITE ${PROJECT_SOURCE_DIR}/include/glw/imconfig.h "${FILE_CONTENTS}"
-            "#define IMGUI_API GLW_API\n"
-            "#define IMPLOT_API GLW_API\n"
-        )
-        file(READ ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp FILE_CONTENTS)
-        string(REPLACE [["imgui_impl_opengl3_loader.h"]] "\n#else\n#include <glw/gl.h>" FILE_CONTENTS "${FILE_CONTENTS}")
-        file(WRITE ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp "${FILE_CONTENTS}")
-    endif()
+    FetchContent_MakeAvailable(imgui implot)
 
-    FetchContent_GetProperties(implot)
-    if(NOT implot_POPULATED)
-        FetchContent_Populate(implot)
-        file(COPY_FILE ${implot_SOURCE_DIR}/implot.h ${PROJECT_SOURCE_DIR}/include/glw/implot.h ONLY_IF_DIFFERENT)
-    endif()
+    file(COPY_FILE ${imgui_SOURCE_DIR}/imgui.h ${PROJECT_SOURCE_DIR}/include/glw/imgui.h ONLY_IF_DIFFERENT)
+    file(COPY_FILE ${implot_SOURCE_DIR}/implot.h ${PROJECT_SOURCE_DIR}/include/glw/implot.h ONLY_IF_DIFFERENT)
+    file(CONFIGURE OUTPUT ${imgui_BINARY_DIR}/imgui_impl_opengl.cpp @ONLY CONTENT [[
+        #include "imgui_impl_opengl3.h"
+        #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3)
+          #include <glw/gl.h>
+          #define IMGUI_IMPL_OPENGL_LOADER_CUSTOM
+        #endif
+        #include "imgui_impl_opengl3.cpp"
+    ]])
 
     target_compile_definitions(glw PRIVATE GLW_IMGUI)
     target_include_directories(glw PRIVATE ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
     target_include_directories(glw PRIVATE ${implot_SOURCE_DIR})
-    target_compile_definitions(glw PRIVATE [[IMGUI_USER_CONFIG=<glw/imconfig.h>]])
-    target_compile_definitions(glw PRIVATE IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
+    target_compile_definitions(glw PRIVATE [[IMGUI_IMPL_API=]] [[IMGUI_USER_CONFIG=<glw/imconfig.h>]])
 
     target_sources(glw PRIVATE
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+        ${imgui_BINARY_DIR}/imgui_impl_opengl.cpp
 
         ${imgui_SOURCE_DIR}/imgui.cpp
         ${imgui_SOURCE_DIR}/imgui_draw.cpp

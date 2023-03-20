@@ -4,6 +4,5 @@
 cmake-build-*/
 /build/
 /out/
-/include/glw/imconfig.h
 /include/glw/imgui.h
 /include/glw/implot.h
